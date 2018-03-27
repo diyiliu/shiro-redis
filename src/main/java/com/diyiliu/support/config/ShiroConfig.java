@@ -39,74 +39,21 @@ public class ShiroConfig {
     private ShiroProperties shiroProperties;
 
     /**
-     * shiro过滤器
+     * realm实现
      *
-     * @param securityManager
      * @return
      */
     @Bean
-    public ShiroFilterFactoryBean shiroFilter(SecurityManager securityManager) {
-        ShiroFilterFactoryBean factoryBean = new ShiroFilterFactoryBean();
-        factoryBean.setSecurityManager(securityManager);
-        factoryBean.setLoginUrl(shiroProperties.getLoginUrl());
+    public UserRealm userRealm() {
+        UserRealm userRealm = new UserRealm();
+        HashedCredentialsMatcher matcher = new HashedCredentialsMatcher();
+        matcher.setHashAlgorithmName(shiroProperties.getHashAlgorithmName());
+        matcher.setHashIterations(shiroProperties.getHashIterations());
+        userRealm.setCredentialsMatcher(matcher);
 
-        Map<String, Filter> filters = new LinkedHashMap<>();
-        filters.put("authc", formAuthenticationFilter());
-        factoryBean.setFilters(filters);
-
-        factoryBean.setFilterChainDefinitionMap(shiroProperties.getFilterChainDefinitions());
-
-        return factoryBean;
+        return userRealm;
     }
 
-    /**
-     * 安全管理器
-     *
-     * @param userRealm
-     * @param sessionManager
-     * @param redisCacheManager
-     * @return
-     */
-    @Bean
-    public DefaultWebSecurityManager securityManager(UserRealm userRealm,
-                                                     SessionManager sessionManager,
-                                                     RedisCacheManager redisCacheManager) {
-
-        DefaultWebSecurityManager securityManager = new DefaultWebSecurityManager();
-        securityManager.setRealm(userRealm);
-        securityManager.setSessionManager(sessionManager);
-        securityManager.setCacheManager(redisCacheManager);
-
-        return securityManager;
-    }
-
-    /**
-     * 会话管理器
-     *
-     * @param redisSessionDao
-     * @param redisCacheManager
-     * @return
-     */
-    @Bean
-    public SessionManager sessionManager(RedisSessionDao redisSessionDao,
-                                         RedisCacheManager redisCacheManager) {
-        DefaultWebSessionManager sessionManager = new DefaultWebSessionManager();
-        sessionManager.setGlobalSessionTimeout(1800);
-        sessionManager.setSessionIdUrlRewritingEnabled(false);
-
-        // 会话cookie
-        Cookie cookie = new SimpleCookie();
-        cookie.setName("shareCookie");
-        cookie.setHttpOnly(true);
-        cookie.setPath("/");
-        sessionManager.setSessionIdCookie(cookie);
-
-        // redis
-        sessionManager.setSessionDAO(redisSessionDao);
-        sessionManager.setCacheManager(redisCacheManager);
-
-        return sessionManager;
-    }
 
     /**
      * redisSessionDao
@@ -132,6 +79,85 @@ public class ShiroConfig {
     }
 
     /**
+     * 会话管理器
+     *
+     * @return
+     */
+    @Bean
+    public SessionManager sessionManager() {
+        DefaultWebSessionManager sessionManager = new DefaultWebSessionManager();
+        sessionManager.setGlobalSessionTimeout(1800);
+        sessionManager.setSessionIdUrlRewritingEnabled(false);
+
+        // 会话cookie
+        /*
+        Cookie cookie = new SimpleCookie();
+        cookie.setName("shareCookie");
+        cookie.setHttpOnly(true);
+        cookie.setPath("/");
+        sessionManager.setSessionIdCookie(cookie);
+        */
+
+        // redis
+        sessionManager.setSessionDAO(redisSessionDao());
+        sessionManager.setCacheManager(redisCacheManager());
+
+        return sessionManager;
+    }
+
+    /**
+     * 安全管理器
+     *
+     * @return
+     */
+    @Bean
+    public DefaultWebSecurityManager securityManager() {
+
+        DefaultWebSecurityManager securityManager = new DefaultWebSecurityManager();
+        securityManager.setRealm(userRealm());
+        securityManager.setSessionManager(sessionManager());
+        securityManager.setCacheManager(redisCacheManager());
+
+        return securityManager;
+    }
+
+    @Bean
+    public DefaultAdvisorAutoProxyCreator defaultAdvisorAutoProxyCreator() {
+        DefaultAdvisorAutoProxyCreator autoProxyCreator = new DefaultAdvisorAutoProxyCreator();
+        autoProxyCreator.setProxyTargetClass(true);
+
+        return autoProxyCreator;
+    }
+
+    @Bean
+    public AuthorizationAttributeSourceAdvisor authorizationAttributeSourceAdvisor() {
+        AuthorizationAttributeSourceAdvisor attributeSourceAdvisor = new AuthorizationAttributeSourceAdvisor();
+        attributeSourceAdvisor.setSecurityManager(securityManager());
+
+        return attributeSourceAdvisor;
+    }
+
+    /**
+     * shiro过滤器
+     *
+     * @return
+     */
+    @Bean
+    public ShiroFilterFactoryBean shiroFilter() {
+        ShiroFilterFactoryBean factoryBean = new ShiroFilterFactoryBean();
+        factoryBean.setSecurityManager(securityManager());
+        factoryBean.setLoginUrl(shiroProperties.getLoginUrl());
+
+        Map<String, Filter> filters = new LinkedHashMap<>();
+        filters.put("authc", formAuthenticationFilter());
+        factoryBean.setFilters(filters);
+
+        factoryBean.setFilterChainDefinitionMap(shiroProperties.getFilterChainDefinitions());
+
+        return factoryBean;
+    }
+
+    /**
      * 表单身份验证过滤器
      *
      * @return
@@ -146,37 +172,5 @@ public class ShiroConfig {
         formLoginFilter.setRememberMeParam(shiroProperties.getRememberMeParam());
 
         return formLoginFilter;
-    }
-
-    /**
-     * realm实现
-     *
-     * @return
-     */
-    @Bean
-    public UserRealm userRealm() {
-        UserRealm userRealm = new UserRealm();
-        HashedCredentialsMatcher matcher = new HashedCredentialsMatcher();
-        matcher.setHashAlgorithmName(shiroProperties.getHashAlgorithmName());
-        matcher.setHashIterations(shiroProperties.getHashIterations());
-        userRealm.setCredentialsMatcher(matcher);
-
-        return userRealm;
-    }
-
-    @Bean
-    public DefaultAdvisorAutoProxyCreator defaultAdvisorAutoProxyCreator() {
-        DefaultAdvisorAutoProxyCreator autoProxyCreator = new DefaultAdvisorAutoProxyCreator();
-        autoProxyCreator.setProxyTargetClass(true);
-
-        return autoProxyCreator;
-    }
-
-    @Bean
-    public AuthorizationAttributeSourceAdvisor authorizationAttributeSourceAdvisor(DefaultWebSecurityManager securityManager) {
-        AuthorizationAttributeSourceAdvisor attributeSourceAdvisor = new AuthorizationAttributeSourceAdvisor();
-        attributeSourceAdvisor.setSecurityManager(securityManager);
-
-        return attributeSourceAdvisor;
     }
 }
