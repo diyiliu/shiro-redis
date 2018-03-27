@@ -1,0 +1,46 @@
+# https://docs.spring.io/spring-boot/docs/1.5.9.RELEASE/reference/htmlsingle/#common-application-properties
+# WEB
+server:
+  port: 8888
+  context-path: '/'
+
+# SPRING
+spring:
+  thymeleaf:
+    prefix: 'classpath:/template/'
+    suffix: .html
+    encoding: UTF-8
+    mode: HTML5
+    cache: false
+
+  mvc:
+    static-path-pattern: '/static/**'
+
+  resources:
+    static-locations: 'classpath:/static/'
+
+  redis:
+    database: 132
+    host: 192.168.1.132
+    port: 6379
+    password:
+    timeout: 30
+# LOGGING
+logging:
+  config: 'classpath:logback.xml'
+
+shiro:
+  login-url: '/login'
+  success-url: '/home'
+  hash-algorithm: MD5
+  hash-iterations: 2
+  username-param: username
+  password-param: password
+  remember-me-param: rememberMe
+  filter-chain-definitions:
+    /login: authc
+    /logout: anon
+    /unauthorized: anon
+    /static/: anon
+    /authenticated: authc
+    /**: user

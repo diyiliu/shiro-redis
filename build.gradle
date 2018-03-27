@@ -1,0 +1,66 @@
+group 'com.diyiliu'
+version '2.0'
+
+apply plugin: 'java'
+apply plugin: 'org.springframework.boot'
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+    jcenter()
+}
+
+ext {
+    springBootVersion = '1.5.9.RELEASE'
+    shiroVersion = '1.4.0'
+    thymeleafVersion = '3.0.9.RELEASE'
+}
+
+dependencies {
+    // spring
+    compile group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: "$springBootVersion"
+    compile group: 'org.springframework.boot', name: 'spring-boot-starter-thymeleaf', version: "${springBootVersion}"
+    compile group: 'org.springframework.boot', name: 'spring-boot-starter-data-redis', version: "$springBootVersion"
+    compile group: 'org.springframework.boot', name: 'spring-boot-configuration-processor', version: "$springBootVersion"
+
+    // shiro
+    compile group: 'org.apache.shiro', name: 'shiro-spring', version: "$shiroVersion"
+    compile group: 'org.apache.shiro', name: 'shiro-core', version: "$shiroVersion"
+    compile group: 'org.apache.shiro', name: 'shiro-web', version: "$shiroVersion"
+
+    compile group: 'org.thymeleaf', name: 'thymeleaf', version: "$thymeleafVersion"
+    compile group: 'org.thymeleaf', name: 'thymeleaf-spring4', version: "$thymeleafVersion"
+    compile group: 'nz.net.ultraq.thymeleaf', name: 'thymeleaf-layout-dialect', version: '2.2.2'
+
+    compile group: 'redis.clients', name: 'jedis', version: '2.9.0'
+    compile group: 'org.apache.commons', name: 'commons-pool2', version: '2.5.0'
+    compile group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.3'
+
+    // test
+    testCompile group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: "$springBootVersion"
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = "UTF-8"
+}
+
+
+jar {
+    archiveName = 'shiro-redis.jar'
+}
+
+buildscript {
+    repositories {
+        mavenLocal()
+        mavenCentral()
+        jcenter()
+    }
+
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:1.5.9.RELEASE")
+    }
+}
+
