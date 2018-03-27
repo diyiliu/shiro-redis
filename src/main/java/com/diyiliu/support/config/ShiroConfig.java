@@ -1,17 +1,21 @@
 package com.diyiliu.support.config;
 
+import com.diyiliu.support.cache.RedisCacheManager;
 import com.diyiliu.support.config.properties.ShiroProperties;
+import com.diyiliu.support.redis.RedisSessionDao;
 import com.diyiliu.support.shiro.FormLoginFilter;
-import com.diyiliu.support.shiro.RedisSessionDao;
 import com.diyiliu.support.shiro.UserRealm;
 import org.apache.shiro.authc.credential.HashedCredentialsMatcher;
 import org.apache.shiro.mgt.SecurityManager;
-import org.apache.shiro.session.mgt.eis.JavaUuidSessionIdGenerator;
+import org.apache.shiro.session.mgt.SessionManager;
+import org.apache.shiro.spring.LifecycleBeanPostProcessor;
+import org.apache.shiro.spring.security.interceptor.AuthorizationAttributeSourceAdvisor;
 import org.apache.shiro.spring.web.ShiroFilterFactoryBean;
 import org.apache.shiro.web.mgt.DefaultWebSecurityManager;
 import org.apache.shiro.web.servlet.Cookie;
 import org.apache.shiro.web.servlet.SimpleCookie;
 import org.apache.shiro.web.session.mgt.DefaultWebSessionManager;
+import org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -22,14 +26,14 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * Description: ShiroConfiguration
+ * Description: ShiroConfig
  * Author: DIYILIU
  * Update: 2018-03-26 16:00
  */
 
 @Configuration
 @EnableConfigurationProperties(ShiroProperties.class)
-public class ShiroConfiguration {
+public class ShiroConfig {
 
     @Autowired
     private ShiroProperties shiroProperties;
@@ -57,31 +61,38 @@ public class ShiroConfiguration {
 
     /**
      * 安全管理器
+     *
      * @param userRealm
      * @param sessionManager
+     * @param redisCacheManager
      * @return
      */
     @Bean
     public DefaultWebSecurityManager securityManager(UserRealm userRealm,
-                                                     DefaultWebSessionManager sessionManager) {
+                                                     SessionManager sessionManager,
+                                                     RedisCacheManager redisCacheManager) {
 
         DefaultWebSecurityManager securityManager = new DefaultWebSecurityManager();
         securityManager.setRealm(userRealm);
         securityManager.setSessionManager(sessionManager);
+        securityManager.setCacheManager(redisCacheManager);
 
         return securityManager;
     }
 
     /**
      * 会话管理器
-     * @param sessionDao
+     *
+     * @param redisSessionDao
+     * @param redisCacheManager
      * @return
      */
     @Bean
-    public DefaultWebSessionManager sessionManager(RedisSessionDao sessionDao) {
+    public SessionManager sessionManager(RedisSessionDao redisSessionDao,
+                                         RedisCacheManager redisCacheManager) {
         DefaultWebSessionManager sessionManager = new DefaultWebSessionManager();
-        sessionManager.setGlobalSessionTimeout(1800000);
-        sessionManager.setDeleteInvalidSessions(true);
+        sessionManager.setGlobalSessionTimeout(1800);
+        sessionManager.setSessionIdUrlRewritingEnabled(false);
 
         // 会话cookie
         Cookie cookie = new SimpleCookie();
@@ -90,9 +101,9 @@ public class ShiroConfiguration {
         cookie.setPath("/");
         sessionManager.setSessionIdCookie(cookie);
 
-        // 自定义sessionDAO
-        sessionManager.setSessionDAO(sessionDao);
-        sessionDao.setSessionIdGenerator(new JavaUuidSessionIdGenerator());
+        // redis
+        sessionManager.setSessionDAO(redisSessionDao);
+        sessionManager.setCacheManager(redisCacheManager);
 
         return sessionManager;
     }
@@ -103,12 +114,22 @@ public class ShiroConfiguration {
      * @return
      */
     @Bean
-    public RedisSessionDao sessionDao(){
+    public RedisSessionDao redisSessionDao() {
 
 
-        return  new RedisSessionDao();
+        return new RedisSessionDao();
     }
 
+    /**
+     * redisCacheManager
+     *
+     * @return
+     */
+    @Bean
+    public RedisCacheManager redisCacheManager() {
+
+        return new RedisCacheManager();
+    }
 
     /**
      * 表单身份验证过滤器
@@ -141,5 +162,21 @@ public class ShiroConfiguration {
         userRealm.setCredentialsMatcher(matcher);
 
         return userRealm;
+    }
+
+    @Bean
+    public DefaultAdvisorAutoProxyCreator defaultAdvisorAutoProxyCreator() {
+        DefaultAdvisorAutoProxyCreator autoProxyCreator = new DefaultAdvisorAutoProxyCreator();
+        autoProxyCreator.setProxyTargetClass(true);
+
+        return autoProxyCreator;
+    }
+
+    @Bean
+    public AuthorizationAttributeSourceAdvisor authorizationAttributeSourceAdvisor(DefaultWebSecurityManager securityManager) {
+        AuthorizationAttributeSourceAdvisor attributeSourceAdvisor = new AuthorizationAttributeSourceAdvisor();
+        attributeSourceAdvisor.setSecurityManager(securityManager);
+
+        return attributeSourceAdvisor;
     }
 }

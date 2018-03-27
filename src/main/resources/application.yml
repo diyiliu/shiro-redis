@@ -20,11 +20,10 @@ spring:
     static-locations: 'classpath:/static/'
 
   redis:
-    database: 132
+    database: 1
     host: 192.168.1.132
     port: 6379
     password:
-    timeout: 30
 # LOGGING
 logging:
   config: 'classpath:logback.xml'
