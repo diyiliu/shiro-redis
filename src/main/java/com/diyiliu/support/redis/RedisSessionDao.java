@@ -22,7 +22,7 @@ public class RedisSessionDao extends EnterpriseCacheSessionDAO {
     // session 在redis过期时间是30分钟30*60
     private static int expireTime = 1800;
 
-    private static String prefix = "share-shiro-session:";
+    private static String prefix = "redis-shiro-session:";
 
     @Resource
     private RedisTemplate<String, Object> redisTemplate;

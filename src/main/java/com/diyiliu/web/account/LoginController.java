@@ -4,12 +4,14 @@ import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.ExcessiveAttemptsException;
 import org.apache.shiro.authc.IncorrectCredentialsException;
 import org.apache.shiro.authc.UnknownAccountException;
+import org.apache.shiro.session.Session;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.servlet.http.HttpServletRequest;
+import java.net.InetAddress;
 
 /**
  * Description: LoginController
@@ -57,6 +59,14 @@ public class LoginController {
 
     @GetMapping("/home")
     public String home(){
+        try {
+            String hostAddress = InetAddress.getLocalHost().getHostAddress();
+            Session session = SecurityUtils.getSubject().getSession();
+
+            session.setAttribute("host", hostAddress);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         return "home";
     }

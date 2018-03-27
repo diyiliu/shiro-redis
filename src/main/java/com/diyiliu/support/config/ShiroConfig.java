@@ -6,14 +6,10 @@ import com.diyiliu.support.redis.RedisSessionDao;
 import com.diyiliu.support.shiro.FormLoginFilter;
 import com.diyiliu.support.shiro.UserRealm;
 import org.apache.shiro.authc.credential.HashedCredentialsMatcher;
-import org.apache.shiro.mgt.SecurityManager;
 import org.apache.shiro.session.mgt.SessionManager;
-import org.apache.shiro.spring.LifecycleBeanPostProcessor;
 import org.apache.shiro.spring.security.interceptor.AuthorizationAttributeSourceAdvisor;
 import org.apache.shiro.spring.web.ShiroFilterFactoryBean;
 import org.apache.shiro.web.mgt.DefaultWebSecurityManager;
-import org.apache.shiro.web.servlet.Cookie;
-import org.apache.shiro.web.servlet.SimpleCookie;
 import org.apache.shiro.web.session.mgt.DefaultWebSessionManager;
 import org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -86,7 +82,8 @@ public class ShiroConfig {
     @Bean
     public SessionManager sessionManager() {
         DefaultWebSessionManager sessionManager = new DefaultWebSessionManager();
-        sessionManager.setGlobalSessionTimeout(1800);
+        // session 过期时间
+        sessionManager.setGlobalSessionTimeout(1800000);
         sessionManager.setSessionIdUrlRewritingEnabled(false);
 
         // 会话cookie
@@ -147,6 +144,7 @@ public class ShiroConfig {
         ShiroFilterFactoryBean factoryBean = new ShiroFilterFactoryBean();
         factoryBean.setSecurityManager(securityManager());
         factoryBean.setLoginUrl(shiroProperties.getLoginUrl());
+        factoryBean.setSuccessUrl(shiroProperties.getSuccessUrl());
 
         Map<String, Filter> filters = new LinkedHashMap<>();
         filters.put("authc", formAuthenticationFilter());

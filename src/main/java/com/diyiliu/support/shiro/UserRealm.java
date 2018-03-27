@@ -1,7 +1,6 @@
 package com.diyiliu.support.shiro;
 
 
-import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
@@ -9,11 +8,8 @@ import org.apache.shiro.authc.SimpleAuthenticationInfo;
 import org.apache.shiro.authz.AuthorizationInfo;
 import org.apache.shiro.authz.SimpleAuthorizationInfo;
 import org.apache.shiro.realm.AuthorizingRealm;
-import org.apache.shiro.session.Session;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.apache.shiro.util.ByteSource;
-
-import java.net.InetAddress;
 
 /**
  * Description: UserRealm
@@ -45,16 +41,6 @@ public class UserRealm extends AuthorizingRealm {
                 "19a096da58f072f8dba15ed0402d9e99",
                 ByteSource.Util.bytes("admin57c5eec31d71ee4e74f86e6750ad73cf"),
                 getName());
-
-
-        try {
-            String hostAddress = InetAddress.getLocalHost().getHostAddress();
-            Session session = SecurityUtils.getSubject().getSession();
-
-            session.setAttribute("host", hostAddress);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
 
         return authenticationInfo;
     }
